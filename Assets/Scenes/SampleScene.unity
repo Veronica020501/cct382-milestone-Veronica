@@ -483,9 +483,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 734872791f5b6224a8f6a6db03ed5b35, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NewMonoBehaviourScript
+  target: {fileID: 0}
   walkSpeed: 2
-  runSpeed: 5
-  turnSpeed: 10
+  sprintSpeed: 7
+  rotationSpeed: 10
+  isSprinting: 0
 --- !u!114 &642648056
 MonoBehaviour:
   m_ObjectHideFlags: 0
