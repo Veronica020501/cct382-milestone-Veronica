@@ -397,15 +397,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: e1af740f30dfdb14a9cbcc62f6e78120, type: 3}
       propertyPath: m_LocalScale.x
-      value: 2.4445155
+      value: 4.1730323
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: e1af740f30dfdb14a9cbcc62f6e78120, type: 3}
       propertyPath: m_LocalScale.y
-      value: 2.4445155
+      value: 4.1730323
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: e1af740f30dfdb14a9cbcc62f6e78120, type: 3}
       propertyPath: m_LocalScale.z
-      value: 2.4445155
+      value: 4.1730323
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: e1af740f30dfdb14a9cbcc62f6e78120, type: 3}
       propertyPath: m_LocalPosition.x
@@ -413,11 +413,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: e1af740f30dfdb14a9cbcc62f6e78120, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 3.38
+      value: 3.16
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: e1af740f30dfdb14a9cbcc62f6e78120, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 24.198
+      value: 24.405
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: e1af740f30dfdb14a9cbcc62f6e78120, type: 3}
       propertyPath: m_LocalRotation.w
@@ -488,6 +488,10 @@ MonoBehaviour:
   sprintSpeed: 7
   rotationSpeed: 10
   isSprinting: 0
+  isJumping: 0
+  jumpWindUpTime: 0.4
+  isAttacking: 0
+  attackDuration: 0.6
 --- !u!114 &642648056
 MonoBehaviour:
   m_ObjectHideFlags: 0
