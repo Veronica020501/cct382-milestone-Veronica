@@ -19,8 +19,15 @@ public class PlayerMovement : MonoBehaviour
     public bool isSprinting;
    
     // these are the values of each animation (walk/run) in blend tree
-    float walkBlend = 0.5f;   // walk clip's threshold
-    float runBlend = 1f;     // run clip's threshold
+    float walkBlend = 0.5f; 
+    float runBlend = 1f;
+
+    // jumping values
+    public bool isJumping;
+
+    public float jumpWindUpTime = 0.4f;   // seconds of build-up before the character moves
+    private float jumpTimer;
+
 
     void Start()
     {
@@ -30,8 +37,12 @@ public class PlayerMovement : MonoBehaviour
     private void Awake()
     {
         playerControls = new PlayerControls();
+
         playerControls.Player.SprintStart.performed += x => SprintPressed();
         playerControls.Player.SprintFinish.performed += x => SprintReleased();
+
+        playerControls.Player.Jump.performed += x => JumpPressed();
+        playerControls.Player.Jump.canceled += x => JumpReleased();
 
     }
 
@@ -61,7 +72,11 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
 
-        animator.SetFloat("MoveX", 0);
+        //if (isJumping) jumpTimer += Time.deltaTime;
+        //bool windingUp = isJumping && jumpTimer < jumpWindUpTime;
+
+        //animator.SetFloat("MoveX", 0);
+        animator.SetFloat("MoveX", isJumping ? 1f : 0f, 0.1f, Time.deltaTime);
 
         //float animationSpeed = sprinting ? 2f : 1f;
 
@@ -73,8 +88,11 @@ public class PlayerMovement : MonoBehaviour
         ////* animationSpeed
         //);
 
-        float blend = isSprinting ? runBlend: walkBlend;
-        animator.SetFloat("MoveY", moveInput.magnitude * blend);
+        float blend = isSprinting ? runBlend: walkBlend;    // determines current blend tree value
+        float moveY = isJumping ? 0f : moveInput.magnitude * blend;
+        animator.SetFloat("MoveY", moveY, 0.1f, Time.deltaTime);
+
+        //animator.SetFloat("MoveY", moveInput.magnitude * blend);
 
         Vector3 direction = new Vector3(
             moveInput.x,
@@ -84,6 +102,8 @@ public class PlayerMovement : MonoBehaviour
 
         //float currentSpeed = sprinting ? runSpeed : walkSpeed;
        
+       //if (!windingUp)
+       // {
         if (isSprinting)
         {
             transform.position += direction * sprintSpeed * Time.deltaTime;
@@ -92,7 +112,7 @@ public class PlayerMovement : MonoBehaviour
         {
             transform.position += direction * walkSpeed * Time.deltaTime; //walkSpeed was currentSpeed
         }
-
+        //}
 
         if (direction != Vector3.zero)  //.zero is a static field that represents the constant 0
         {
@@ -115,6 +135,24 @@ public class PlayerMovement : MonoBehaviour
     private void SprintReleased() 
     {
         isSprinting = false;
+    }
+
+    private void JumpPressed()
+    {
+        isJumping = true;
+        jumpTimer = 0f;
+
+        // Snap straight to the jump pose instead of blending slowly
+        animator.SetFloat("MoveX", 1f);
+        animator.SetFloat("MoveY", 0f);
+
+        // Restart the blend tree so the jump clip begins at its first frame
+        animator.Play("Blend Tree", 0, 0f);
+    }
+
+    private void JumpReleased()
+    {
+        isJumping = false;
     }
 
 }
