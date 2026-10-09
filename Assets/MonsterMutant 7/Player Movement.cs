@@ -4,9 +4,9 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     private PlayerControls playerControls;
-    
+
     public Transform target;
-    
+
     public float walkSpeed = 2f;
     public float sprintSpeed = 7f;
     public float rotationSpeed = 10f;
@@ -17,9 +17,9 @@ public class PlayerMovement : MonoBehaviour
     private Animator animator;
 
     public bool isSprinting;
-   
+
     // these are the values of each animation (walk/run) in blend tree
-    float walkBlend = 0.5f; 
+    float walkBlend = 0.5f;
     float runBlend = 1f;
 
     // jumping values
@@ -79,7 +79,7 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
 
-         if (isAttacking)
+        if (isAttacking)
         {
             attackTimer += Time.deltaTime;
             if (attackTimer > attackDuration) isAttacking = false;
@@ -90,8 +90,10 @@ public class PlayerMovement : MonoBehaviour
 
         //animator.SetFloat("MoveX", 0);
         //animator.SetFloat("MoveX", isJumping ? 1f : 0f, 0.1f, Time.deltaTime);
+
+        float blendTime = (isAttacking || isJumping) ? 0.1f : 0.25f;
         float moveX = isAttacking ? -1f : (isJumping ? 1f : 0f);
-        animator.SetFloat("MoveX", moveX, 0.1f, Time.deltaTime);
+        animator.SetFloat("MoveX", moveX, blendTime, Time.deltaTime);
 
         //float animationSpeed = sprinting ? 2f : 1f;
 
@@ -103,10 +105,10 @@ public class PlayerMovement : MonoBehaviour
         ////* animationSpeed
         //);
 
-        float blend = isSprinting ? runBlend: walkBlend;    // determines current blend tree value
+        float blend = isSprinting ? runBlend : walkBlend;    // determines current blend tree value
         //float moveY = isJumping ? 0f : moveInput.magnitude * blend;
         float moveY = (isJumping || isAttacking) ? 0f : moveInput.magnitude * blend;
-        animator.SetFloat("MoveY", moveY, 0.1f, Time.deltaTime);
+        animator.SetFloat("MoveY", moveY, blendTime, Time.deltaTime);
 
         //animator.SetFloat("MoveY", moveInput.magnitude * blend);
 
@@ -117,9 +119,9 @@ public class PlayerMovement : MonoBehaviour
         );
 
         //float currentSpeed = sprinting ? runSpeed : walkSpeed;
-       
-       //if (!windingUp)
-       // {
+
+        //if (!windingUp)
+        // {
         if (isSprinting)
         {
             transform.position += direction * sprintSpeed * Time.deltaTime;
@@ -148,7 +150,7 @@ public class PlayerMovement : MonoBehaviour
         isSprinting = true;
     }
 
-    private void SprintReleased() 
+    private void SprintReleased()
     {
         isSprinting = false;
     }
@@ -170,7 +172,7 @@ public class PlayerMovement : MonoBehaviour
     {
         isJumping = false;
     }
-    
+
     private void AttackPressed()
     {
         if (isAttacking) return;
