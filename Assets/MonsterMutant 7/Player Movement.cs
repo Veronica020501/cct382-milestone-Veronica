@@ -26,7 +26,12 @@ public class PlayerMovement : MonoBehaviour
     public bool isJumping;
 
     public float jumpWindUpTime = 0.4f;   // seconds of build-up before the character moves
-    private float jumpTimer;
+    //private float jumpTimer;
+
+    // attack values
+    public bool isAttacking;
+    public float attackDuration = 0.6f;
+    private float attackTimer;
 
 
     void Start()
@@ -43,6 +48,8 @@ public class PlayerMovement : MonoBehaviour
 
         playerControls.Player.Jump.performed += x => JumpPressed();
         playerControls.Player.Jump.canceled += x => JumpReleased();
+
+        playerControls.Player.Attack.performed += x => AttackPressed();
 
     }
 
@@ -72,15 +79,23 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
 
+         if (isAttacking)
+        {
+            attackTimer += Time.deltaTime;
+            if (attackTimer > attackDuration) isAttacking = false;
+        }
+
         //if (isJumping) jumpTimer += Time.deltaTime;
         //bool windingUp = isJumping && jumpTimer < jumpWindUpTime;
 
         //animator.SetFloat("MoveX", 0);
-        animator.SetFloat("MoveX", isJumping ? 1f : 0f, 0.1f, Time.deltaTime);
+        //animator.SetFloat("MoveX", isJumping ? 1f : 0f, 0.1f, Time.deltaTime);
+        float moveX = isAttacking ? -1f : (isJumping ? 1f : 0f);
+        animator.SetFloat("MoveX", moveX, 0.1f, Time.deltaTime);
 
         //float animationSpeed = sprinting ? 2f : 1f;
 
-       
+
         // from lab 3 script
         //animator.SetFloat(
         //    "MoveY",
@@ -89,7 +104,8 @@ public class PlayerMovement : MonoBehaviour
         //);
 
         float blend = isSprinting ? runBlend: walkBlend;    // determines current blend tree value
-        float moveY = isJumping ? 0f : moveInput.magnitude * blend;
+        //float moveY = isJumping ? 0f : moveInput.magnitude * blend;
+        float moveY = (isJumping || isAttacking) ? 0f : moveInput.magnitude * blend;
         animator.SetFloat("MoveY", moveY, 0.1f, Time.deltaTime);
 
         //animator.SetFloat("MoveY", moveInput.magnitude * blend);
@@ -140,7 +156,7 @@ public class PlayerMovement : MonoBehaviour
     private void JumpPressed()
     {
         isJumping = true;
-        jumpTimer = 0f;
+        //jumpTimer = 0f;
 
         // Snap straight to the jump pose instead of blending slowly
         animator.SetFloat("MoveX", 1f);
@@ -154,5 +170,16 @@ public class PlayerMovement : MonoBehaviour
     {
         isJumping = false;
     }
+    
+    private void AttackPressed()
+    {
+        if (isAttacking) return;
 
+        isAttacking = true;
+        attackTimer = 0f;
+
+        animator.SetFloat("MoveX", -1f);
+        animator.SetFloat("MoveY", 0f);
+        animator.Play("Blend Tree", 0, 0f);
+    }
 }
