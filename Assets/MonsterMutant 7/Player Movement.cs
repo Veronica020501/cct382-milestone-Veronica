@@ -33,10 +33,14 @@ public class PlayerMovement : MonoBehaviour
     public float attackDuration = 0.6f;
     private float attackTimer;
 
+    // Camera 
+    private Transform cameraTransform;
+
 
     void Start()
     {
         animator = GetComponentInChildren<Animator>();
+        cameraTransform = Camera.main.transform;  // the Main Camera that has the Cinemachine Brain 
     }
 
     private void Awake()
@@ -112,11 +116,22 @@ public class PlayerMovement : MonoBehaviour
 
         //animator.SetFloat("MoveY", moveInput.magnitude * blend);
 
-        Vector3 direction = new Vector3(
-            moveInput.x,
-            0f,
-            moveInput.y
-        );
+        //Vector3 direction = new Vector3(
+        //    moveInput.x,
+        //    0f,
+        //    moveInput.y
+        //);
+        // Camera's forward and right, flattened onto the ground
+        Vector3 camForward = cameraTransform.forward;
+        Vector3 camRight = cameraTransform.right;
+        camForward.y = 0f;
+        camRight.y = 0f;
+        camForward.Normalize();
+        camRight.Normalize();
+
+        // W/S move toward/away from where the camera looks, A/D move left/right of it
+        Vector3 direction = camForward * moveInput.y + camRight * moveInput.x;
+        direction = Vector3.ClampMagnitude(direction, 1f);
 
         //float currentSpeed = sprinting ? runSpeed : walkSpeed;
 
