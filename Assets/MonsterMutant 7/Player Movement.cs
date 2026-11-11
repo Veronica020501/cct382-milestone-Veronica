@@ -12,7 +12,6 @@ public class PlayerMovement : MonoBehaviour
     public float rotationSpeed = 10f;
 
     private Vector2 moveInput;
-    //private bool sprinting;
 
     private Animator animator;
 
@@ -25,22 +24,27 @@ public class PlayerMovement : MonoBehaviour
     // jumping values
     public bool isJumping;
 
-    public float jumpWindUpTime = 0.4f;   // seconds of build-up before the character moves
-    //private float jumpTimer;
+    [Tooltip("How long the jump pose lasts (match your jump clip's length). The jump ends after this time even if the key is still held.")]
+    public float jumpDuration = 0.8f;
+
+    [Tooltip("Multiplier on move speed while in the air. 1 = same as ground speed.")]
+    public float jumpMoveSpeedMultiplier = 1f;
+
+    private float jumpTimer;
 
     // attack values
+    // isAttacking is set/cleared by the ComboController, which owns all attack timing.
     public bool isAttacking;
-    public float attackDuration = 0.6f;
-    private float attackTimer;
+    public ComboController combo;         // assign in the Inspector
 
-    // Camera 
+    // Camera
     private Transform cameraTransform;
 
 
     void Start()
     {
         animator = GetComponentInChildren<Animator>();
-        cameraTransform = Camera.main.transform;  // the Main Camera that has the Cinemachine Brain 
+        cameraTransform = Camera.main.transform;  // the Main Camera that has the Cinemachine Brain
     }
 
     private void Awake()
@@ -50,11 +54,12 @@ public class PlayerMovement : MonoBehaviour
         playerControls.Player.SprintStart.performed += x => SprintPressed();
         playerControls.Player.SprintFinish.performed += x => SprintReleased();
 
+        // Only the press starts a jump. Releasing the key no longer ends it:
+        // the jump now ends on its own timer, so holding space can't leave you
+        // stuck in the jump pose and sliding along the ground.
         playerControls.Player.Jump.performed += x => JumpPressed();
-        playerControls.Player.Jump.canceled += x => JumpReleased();
 
         playerControls.Player.Attack.performed += x => AttackPressed();
-
     }
 
 
@@ -62,13 +67,6 @@ public class PlayerMovement : MonoBehaviour
     {
         moveInput = value.Get<Vector2>();
     }
-
-    //public void OnSprint(InputValue value)
-    //{
-    //    sprinting = value.isPressed;
-    //}
-
-
 
     private void OnEnable()
     {
@@ -82,45 +80,23 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-
-        if (isAttacking)
+        // End the jump when its time is up, even if the key is still held
+        if (isJumping)
         {
-            attackTimer += Time.deltaTime;
-            if (attackTimer > attackDuration) isAttacking = false;
+            jumpTimer += Time.deltaTime;
+            if (jumpTimer >= jumpDuration) isJumping = false;
         }
 
-        //if (isJumping) jumpTimer += Time.deltaTime;
-        //bool windingUp = isJumping && jumpTimer < jumpWindUpTime;
-
-        //animator.SetFloat("MoveX", 0);
-        //animator.SetFloat("MoveX", isJumping ? 1f : 0f, 0.1f, Time.deltaTime);
-
+        // MoveX = 1 selects the jump pose in the blend tree; 0 is normal locomotion.
         float blendTime = (isAttacking || isJumping) ? 0.1f : 0.25f;
-        float moveX = isAttacking ? -1f : (isJumping ? 1f : 0f);
+        float moveX = isJumping ? 1f : 0f;
         animator.SetFloat("MoveX", moveX, blendTime, Time.deltaTime);
 
-        //float animationSpeed = sprinting ? 2f : 1f;
-
-
-        // from lab 3 script
-        //animator.SetFloat(
-        //    "MoveY",
-        //    moveInput.magnitude
-        ////* animationSpeed
-        //);
-
+        // Locomotion animation is held at 0 during jumps/attacks (the jump/attack pose plays instead)
         float blend = isSprinting ? runBlend : walkBlend;    // determines current blend tree value
-        //float moveY = isJumping ? 0f : moveInput.magnitude * blend;
         float moveY = (isJumping || isAttacking) ? 0f : moveInput.magnitude * blend;
         animator.SetFloat("MoveY", moveY, blendTime, Time.deltaTime);
 
-        //animator.SetFloat("MoveY", moveInput.magnitude * blend);
-
-        //Vector3 direction = new Vector3(
-        //    moveInput.x,
-        //    0f,
-        //    moveInput.y
-        //);
         // Camera's forward and right, flattened onto the ground
         Vector3 camForward = cameraTransform.forward;
         Vector3 camRight = cameraTransform.right;
@@ -133,31 +109,26 @@ public class PlayerMovement : MonoBehaviour
         Vector3 direction = camForward * moveInput.y + camRight * moveInput.x;
         direction = Vector3.ClampMagnitude(direction, 1f);
 
-        //float currentSpeed = sprinting ? runSpeed : walkSpeed;
-
-        //if (!windingUp)
-        // {
-        if (isSprinting)
+        // Movement lock: only attacks plant the character.
+        // Jumping does NOT lock movement, so you can jump forward while moving.
+        if (!isAttacking)
         {
-            transform.position += direction * sprintSpeed * Time.deltaTime;
-        }
-        else
-        {
-            transform.position += direction * walkSpeed * Time.deltaTime; //walkSpeed was currentSpeed
-        }
-        //}
+            float speed = isSprinting ? sprintSpeed : walkSpeed;
+            if (isJumping) speed *= jumpMoveSpeedMultiplier;
 
-        if (direction != Vector3.zero)  //.zero is a static field that represents the constant 0
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(direction);
+            transform.position += direction * speed * Time.deltaTime;
 
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                targetRotation,
-                rotationSpeed * Time.deltaTime
-            );
+            if (direction != Vector3.zero)  //.zero is a static field that represents the constant 0
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+                transform.rotation = Quaternion.Slerp(
+                    transform.rotation,
+                    targetRotation,
+                    rotationSpeed * Time.deltaTime
+                );
+            }
         }
-
     }
 
     private void SprintPressed()
@@ -172,8 +143,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void JumpPressed()
     {
+        // Ignore presses while already jumping or mid-attack
+        if (isJumping || isAttacking) return;
+
         isJumping = true;
-        //jumpTimer = 0f;
+        jumpTimer = 0f;
 
         // Snap straight to the jump pose instead of blending slowly
         animator.SetFloat("MoveX", 1f);
@@ -183,20 +157,12 @@ public class PlayerMovement : MonoBehaviour
         animator.Play("Blend Tree", 0, 0f);
     }
 
-    private void JumpReleased()
-    {
-        isJumping = false;
-    }
-
     private void AttackPressed()
     {
-        if (isAttacking) return;
+        // Don't start an attack mid-jump
+        if (isJumping) return;
 
-        isAttacking = true;
-        attackTimer = 0f;
-
-        animator.SetFloat("MoveX", -1f);
-        animator.SetFloat("MoveY", 0f);
-        animator.Play("Blend Tree", 0, 0f);
+        // The combo controller decides which hit this press means
+        if (combo != null) combo.RequestAttack();
     }
 }
