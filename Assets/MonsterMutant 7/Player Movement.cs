@@ -11,6 +11,8 @@ public class PlayerMovement : MonoBehaviour
     public float sprintSpeed = 7f;
     public float rotationSpeed = 10f;
 
+    private CharacterController controller;
+
     private Vector2 moveInput;
 
     private Animator animator;
@@ -45,6 +47,7 @@ public class PlayerMovement : MonoBehaviour
     {
         animator = GetComponentInChildren<Animator>();
         cameraTransform = Camera.main.transform;  // the Main Camera that has the Cinemachine Brain
+        controller = GetComponent<CharacterController>();
     }
 
     private void Awake()
@@ -116,7 +119,10 @@ public class PlayerMovement : MonoBehaviour
             float speed = isSprinting ? sprintSpeed : walkSpeed;
             if (isJumping) speed *= jumpMoveSpeedMultiplier;
 
-            transform.position += direction * speed * Time.deltaTime;
+            //transform.position += direction * speed * Time.deltaTime;
+            Vector3 move = direction * speed * Time.deltaTime;
+            if (controller != null) controller.Move(move);
+            else transform.position += move;
 
             if (direction != Vector3.zero)  //.zero is a static field that represents the constant 0
             {
