@@ -30,7 +30,15 @@ public class PlayerMovement : MonoBehaviour
     public float jumpDuration = 0.8f;
 
     [Tooltip("Multiplier on move speed while in the air. 1 = same as ground speed.")]
-    public float jumpMoveSpeedMultiplier = 1f;
+    [Range(0.1f, 3f)] // <--- Range updated to allow values up to 3x speed for farther jumps
+    public float jumpMoveSpeedMultiplier = 1.3f; // Default bumped slightly, change as desired
+
+    [Header("Jump Wind-Up")]
+    [Tooltip("Seconds at the start of the jump where the character plants/crouches before launching forward.")]
+    public float jumpWindUpDuration = 0.15f;
+    [Range(0f, 1f)]
+    [Tooltip("Speed multiplier during the wind-up phase. 0 = completely planted, 0.2 = slight forward lean.")]
+    public float jumpWindUpSpeedMultiplier = 0f;
 
     private float jumpTimer;
 
@@ -91,7 +99,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // MoveX = 1 selects the jump pose in the blend tree; 0 is normal locomotion.
-        float blendTime = (isAttacking || isJumping) ? 0.1f : 0.25f;
+        float blendTime = (isAttacking || isJumping) ? 0.1f : 0.1f;
         float moveX = isJumping ? 1f : 0f;
         animator.SetFloat("MoveX", moveX, blendTime, Time.deltaTime);
 
@@ -117,7 +125,14 @@ public class PlayerMovement : MonoBehaviour
         if (!isAttacking)
         {
             float speed = isSprinting ? sprintSpeed : walkSpeed;
-            if (isJumping) speed *= jumpMoveSpeedMultiplier;
+            if (isJumping)
+            {
+                // During the crouch/wind-up frames, hold the character in place so feet don't slide
+                if (jumpTimer < jumpWindUpDuration)
+                    speed *= jumpWindUpSpeedMultiplier;
+                else
+                    speed *= jumpMoveSpeedMultiplier;
+            }
 
             //transform.position += direction * speed * Time.deltaTime;
             Vector3 move = direction * speed * Time.deltaTime;
