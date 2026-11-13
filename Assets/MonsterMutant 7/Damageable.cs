@@ -5,6 +5,7 @@ using UnityEngine.Events;
 public class Damageable : MonoBehaviour
 {
     [SerializeField] float maxHealth = 40f;
+    public float MaxHealth => maxHealth;
 
     public UnityEvent<float> onDamaged;   // amount of damage taken
     public UnityEvent onDied;
