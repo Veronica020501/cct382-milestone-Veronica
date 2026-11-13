@@ -17,11 +17,13 @@ MonoBehaviour:
   duration: 1.5
   comboWindowStart: 0.1
   hitTime: 0.4
-  damage: 12
-  knockbackForce: 5
   hitRadius: 3
   hitRange: 1.5
-  swingSounds: []
+  hitHeight: 1
+  damage: 12
+  knockbackForce: 5
+  swingSounds:
+  - {fileID: 8300000, guid: eb0fe1197b5329b4a87b3406d00dd8dc, type: 3}
   pitchRange: {x: 0.9, y: 1.1}
   volumeRange: {x: 0.8, y: 1}
   hitVFX: {fileID: 0}
